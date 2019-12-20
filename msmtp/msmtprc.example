@@ -1,0 +1,9 @@
+account gmail
+tls on
+auth on
+host smtp.gmail.com
+port 587
+user user@domain.com
+password "YourAwesomeStr0ngP4zzw0rd"
+from "user@domain.com"
+logfile /var/log/msmtp.log

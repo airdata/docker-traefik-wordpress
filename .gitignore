@@ -1,0 +1,5 @@
+.DS_Store
+msmtp/msmtp
+database/
+content/
+backup/

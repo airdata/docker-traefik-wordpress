@@ -1,0 +1,90 @@
+version: '3.7'
+
+services:
+  reverse-proxy:
+    image: traefik:1.7
+    networks:
+      - backend
+      - frontend
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/traefik.toml
+      - ./acme.json:/acme.json
+
+  mariadb:
+    image: mariadb
+    restart: unless-stopped
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=false"
+    environment:
+      MYSQL_DATABASE: ${dbName}
+      MYSQL_USER: ${dbUser}
+      MYSQL_PASSWORD: ${dbPass}
+      MYSQL_ROOT_PASSWORD: ${dbRoot}
+    volumes:
+      - ./database:/var/lib/mysql
+
+  wordpress:
+    build: .
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    labels:
+      - "traefik.backend=${podName}-wordpress"
+      - "traefik.frontend.rule=Host:${hostRule}"
+      - "traefik.docker.network=${podName}_frontend"
+    environment:
+      WORDPRESS_DB_HOST: mariadb
+      WORDPRESS_DB_USER: ${dbUser}
+      WORDPRESS_DB_PASSWORD: ${dbPass}
+      WORDPRESS_DB_NAME: ${dbName}
+    volumes:
+      - ./content:/var/www/html
+      - ./msmtp/msmtprc:/etc/msmtprc
+
+  backup:
+    image: zeenlym/mariadb-backup
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - TIMEZONE=${timeZone}
+      - SCHEDULE=0 0 3 * *
+      - BACKUP_METHOD=mysqldump
+      - MYSQL_HOST=mariadb
+      - MYSQL_DATABASE=${dbName}
+      - MYSQL_USER=${dbUser}
+      - MYSQL_PASSWORD=${dbPass}
+    volumes:
+      - ./backup:/backup
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    networks:
+      - frontend
+      - backend
+    environment:
+      - ADMINER_DEFAULT_SERVER=mariadb
+    labels:
+      - "traefik.backend=${podName}-adminer"
+      - "traefik.frontend.rule=Host:${adminerHostRule}"
+      - "traefik.docker.network=${podName}_frontend"
+networks:
+  frontend:
+  backend:

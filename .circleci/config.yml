@@ -1,15 +1,13 @@
-version: 2.1 # use CircleCI 2.1
+version: 2.1
 jobs:
   build_jenkins:
-    docker:
-      - image: circleci/php:7.1-node-browsers
+    machine: true
     working_directory: ~/docker-traefik-wordpress
 
     steps:
       - checkout
       - attach_workspace:
           at: ~/docker-traefik-wordpress
-      - setup_remote_docker
       - run:
           name: Load archived Docker image
           command: |

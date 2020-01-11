@@ -32,6 +32,7 @@ services:
 
   wordpress:
     build: .
+    image: airdata/wordpress-in-docker:latest
     depends_on:
       - mariadb
     restart: unless-stopped

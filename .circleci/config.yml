@@ -1,0 +1,26 @@
+version: 2.1 # use CircleCI 2.1
+jobs:
+  build_jenkins:
+    docker:
+      - image: circleci/php:7.1-node-browsers
+    working_directory: ~/docker-traefik-wordpress
+
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/docker-traefik-wordpress
+      - setup_remote_docker
+      - run:
+          name: Load archived Docker image
+          command: |
+            docker-compose -f docker-compose.yml build wordpress
+      - deploy:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASS"
+            docker-compose -f docker-compose.yml push airdata/wordpress-in-docker:latest
+workflows:
+  version: 2
+  default:
+    jobs:
+      - build_jenkins

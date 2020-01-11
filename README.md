@@ -1,4 +1,6 @@
 # Docker: Wordpress
+ [![CircleCI](https://img.shields.io/circleci/project/github/airdata/docker-traefik-wordpress.svg)](https://circleci.com/gh/airdata/docker-traefik-wordpress) 
+
 Dockerfile for Wordpress with mSMTP client.
 
 docker-compose file includes:
